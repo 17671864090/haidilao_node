@@ -3,7 +3,7 @@ const express = require('express'),
 const app = express()
 const mongodb = require('mongoose');
 // 连接mongoodb数据库
-mongodb.connect("mongodb://60.205.178.222:27017/cs",  { useNewUrlParser: true, useUnifiedTopology: true } ,  function(err,client){
+mongodb.connect("mongodb://60.205.178.222:27017/app",  { useNewUrlParser: true, useUnifiedTopology: true } ,  function(err,client){
     if (err) {
         console.log(err)
     }else{
@@ -13,8 +13,9 @@ mongodb.connect("mongodb://60.205.178.222:27017/cs",  { useNewUrlParser: true, u
 const routers =require('./router/index.js')
 const JwtUtil = require('./config/jwt');
 
+
     app.use(function (req, res, next) {
-        if(req.url == '/v1/getgoodslist'  || req.url == '/v3/login' || req.url == '/getgoodslistname'){
+        if(req.url == '/v1/getgoodslist'  || req.url == '/v1/login' || req.url == '/getgoodslistname'){
             next()
         }else{
             let token = req.headers.authorization;
@@ -59,4 +60,4 @@ app.use(bodyParser.urlencoded({
 }));
 routers(app);
 app.use(bodyParser.urlencoded({ extended: true }))
-app.listen(3009);
+    app.listen(3009);

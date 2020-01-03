@@ -6,4 +6,4 @@ RUN npm install -g cnpm --registry=https://registry.npm.taobao.org
 RUN cnpm install
 COPY . /usr/src/app
 EXPOSE 80
-ENTRYPOINT ["node", "server.js"]
+ENTRYPOINT ["node", "index.js"]

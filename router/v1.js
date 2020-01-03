@@ -3,6 +3,17 @@ const router = express.Router();
 const cardnumber =require('../list/cardnumber')
 const Kalman =require('../list/kalmann')
 
+
+
+const User =require('../controller/User/index')
+
+
+router.post('/login', User.login);
+
+
+
+
+
 router.post('/removeshopname', async (req,res) => {
     await cardnumber.remove({_id:req.body._id},function(err,data){
         res.send({

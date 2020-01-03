@@ -5,4 +5,5 @@ module.exports = app => {
     app.use('/v1', v1);
     app.use('/v2', v2);
     app.use('/v3', v3);
+
 }
