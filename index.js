@@ -7,7 +7,7 @@ mongodb.connect("mongodb://60.205.178.222:27017/app",  { useNewUrlParser: true, 
     if (err) {
         console.log(err)
     }else{
-        console.log("数据库连接成功");
+        console.log("数据库连接成功了");
     }
 })
 const routers =require('./router/index.js')
