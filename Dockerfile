@@ -1,9 +1,12 @@
-FROM node:4.2.2
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
-COPY package.json /usr/src/app/
-RUN npm install -g cnpm --registry=https://registry.npm.taobao.org
-RUN cnpm install
-COPY . /usr/src/app
+FROM node:lts-alpine as build-stage
+WORKDIR /app
+COPY package.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+FROM nginx:stable-alpine as production-stage
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY . .
+COPY /Nginx/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-ENTRYPOINT ["node", "index.js"]
+CMD ["nginx", "-g", "daemon off;"]
