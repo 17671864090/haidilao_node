@@ -158,7 +158,7 @@ class CityHandle {
                     })
                 }else{
                     req.send({
-                        code:200,
+                        code:0,
                         msg:res.data
                     })
                 }
@@ -186,14 +186,18 @@ class CityHandle {
                 axios.get(`http://www.mili18.com:9180/service.asmx/mkHM2Str?token=${token}&xmid=12865&hm=${data[i].YAM_phone}&op=1&pk=&rj=`)
                     .then(function (response) {
                         // console.log("状态码获取成功" + response.data + "当前账号:" + i)
-                        Yzmphones.findOne({YAM_phone:data[i].YAM_phone},function (err,data1) {
-                            data1.YAM_Status = response.data
-                            data1.YAM_time = new Date()
-                            data1.save()
-                        })
+                        // Yzmphones.findOne({YAM_phone:data[i].YAM_phone},function (err,data1) {
+                        //     data1.YAM_Status = response.data
+                        //     data1.YAM_time = new Date()
+                        //     data1.save()
+                        // })
+
+                        console.log(response.data)
+
+
                     })
                     .catch(function (error) {
-                        console.log(`手机号码检测失败 ${time} + '${error}`);
+                        throw error
                     });
                 // 检测当前手机号是否延期释放
                 var m = new Date();
@@ -219,7 +223,17 @@ class CityHandle {
 var ins01 = new CityHandle();
 var schedule = require('node-schedule');
 var rule = new schedule.RecurrenceRule();
+
+
  rule.second =[0,10,20,30,40,50]
+
+// var times2    = [1,6,11,16,21,26,31,36,41,46,51,56];
+// rule.minute  = times2;
+
+
+
+
+
 var j = schedule.scheduleJob(rule, function(){
     ins01.asas()
 })
