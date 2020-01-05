@@ -1,53 +1,16 @@
-
-
 const Yzmphones =require('../../list/YzmToken/phone')
 const YzmToken =require('../../list/YzmToken/YzmToken')
-
 const Tokeninfo =require('../../list/YzmToken/Tokeninfo')
-
-
-
 var moment = require('moment');
 var axios = require('axios');
-
-
 class CityHandle {
     constructor() {
-
-        this.a = null;
-
-        this.GetToken().then((res=>{
-
-            a = res.YAM_Token
-
-
-        }))
-
-
-
         this.GetHM2Str = this.GetHM2Str.bind(this)
     }
-
-
-    async GetToken(){
-        return await YzmToken.findOne()
-    }
-
-
-
-
-
-
-
-
-
-
     /**
      * 添加手机号码
      */
     Add(req, res, next){
-
-
         var arr = []
         var data = []
         for (let i in req.body) {
@@ -101,9 +64,7 @@ class CityHandle {
      * @constructor
      */
     async GetHM2Str(req,res,next){
-
         var that = this
-
         await Tokeninfo.findOne({"Authorizationcode":req.body.token},function (err,data) {
             if(data){
                 Yzmphones.findOne({Use:0},function (err,data) {
@@ -147,25 +108,17 @@ class CityHandle {
             }
         })
     }
-
     //生成授权码
     async addYZMCODE(req,res,next){
         const code = Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * 9999
         Tokeninfo.create({Authorizationcode:code},function (err,data) {
-
             res.send({
                 data
             })
         })
     }
-
-
-
     /**
      * 获取指定号码
-     * @param req
-     * @param res
-     * @param next
      * @returns {Promise<void>}
      */
     async mkHM2Str(YAM_phone){
@@ -219,20 +172,20 @@ class CityHandle {
      * @param next
      */
     async asas(req, res, next){
-        var now = moment();
         var time = moment().format('YYYY-DD-MM  HH:mm:ss')
-        // console.log(`手机号码开始检测-------------------------------------${time}`);
+        console.log(`手机号码开始检测-------------------------------------${time}`);
         var token = null
         const xmid = 12865
         await YzmToken.findOne(function (err,docs) {
             token = docs.YAM_Token
         })
         await Yzmphones.find(function (err,data) {
+            console.log('待检测账号总条数----------' + data.length)
+            var numbers = 0;
             for (let i=0;i<data.length;i++) {
-                // console.log(data[i].YAM_time)
                 axios.get(`http://www.mili18.com:9180/service.asmx/mkHM2Str?token=${token}&xmid=12865&hm=${data[i].YAM_phone}&op=1&pk=&rj=`)
                     .then(function (response) {
-                        // console.log("状态码获取成功" + response.data + "当前账号:" + data[i].YAM_phone)
+                        // console.log("状态码获取成功" + response.data + "当前账号:" + i)
                         Yzmphones.findOne({YAM_phone:data[i].YAM_phone},function (err,data1) {
                             data1.YAM_Status = response.data
                             data1.YAM_time = new Date()
@@ -246,30 +199,29 @@ class CityHandle {
                 var m = new Date();
                 var n = new Date(m.getTime());
                 if(n.toString() <= data[i].YAM_time){
-                    // console.log("当前账号不被释放" + data[i].YAM_phone)
+                    console.log("当前账号不被释放" + data[i].YAM_phone)
                 }else{
                     // console.log("释放账号" + data[i].YAM_phone)
-
                     Yzmphones.findOne({YAM_phone:data[i].YAM_phone},function (err,data) {
                         if(data){
                             data.Use = 0
                             data.YAM_time = n
                             data.save()
-                            // console.log('修改成功')
                         }
                     })
-
                     axios.get(`http://www.mili18.com:9180/service.asmx/sfHm?token=${token}&hm=${data[i].YAM_phone}`)  //释放当前账号
                 }
+                numbers = numbers+=1
             }
-        })
-        // console.log(`手机号码完成检测-------------------------------------${time}`)
+            console.log(numbers)
+            })
+        console.log(`手机号码完成检测-------------------------------------${time}`)
     }
 }
 var ins01 = new CityHandle();
 var schedule = require('node-schedule');
 var rule = new schedule.RecurrenceRule();
-rule.second =[0,10,20,30,40,50]
+ rule.second =[0,10,20,30,40,50]
 var j = schedule.scheduleJob(rule, function(){
     ins01.asas()
 })
