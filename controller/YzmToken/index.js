@@ -114,7 +114,7 @@ class CityHandle {
             }else{
                 res.send({
                     code:200,
-                    msg:"当前账号库为空"
+                    msg:"当前账号库为空."
                 })
             }
         })
