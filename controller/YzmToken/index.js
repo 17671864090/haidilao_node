@@ -158,7 +158,7 @@ class CityHandle {
                     })
                 }else{
                     req.send({
-                        code:0,
+                        code:200,
                         msg:res.data
                     })
                 }
@@ -211,9 +211,7 @@ class CityHandle {
                     })
                     axios.get(`http://www.mili18.com:9180/service.asmx/sfHm?token=${token}&hm=${data[i].YAM_phone}`)  //释放当前账号
                 }
-                numbers = numbers+=1
             }
-            console.log(numbers)
             })
         console.log(`手机号码完成检测-------------------------------------${time}`)
     }

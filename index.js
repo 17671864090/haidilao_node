@@ -78,7 +78,7 @@ var j = schedule.scheduleJob(rule, function(){
             })
         })
         .catch(function (error) {
-            console.log('定时获取Token失败,请立即检查系统');
+            console.log('定时获取Token失败,请立即检查系统' + error);
         });
 });
 app.use(bodyParser.json());
