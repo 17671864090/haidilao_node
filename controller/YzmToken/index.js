@@ -41,7 +41,7 @@ class CityHandle {
         var n = new Date(m.getTime() + 1000 * 60 * 2); //延期2分钟后自动释放
         Yzmphones.findOne({YAM_phone:req.body.data},function (err,data) {
             if(data){
-                data.Use = 1
+                data.Use = 0
                 data.YAM_time = n
                 data.save()
                 res.send({
@@ -66,30 +66,41 @@ class CityHandle {
     async GetHM2Str(req,res,next){
         var that = this
         await Tokeninfo.findOne({"Authorizationcode":req.body.token},function (err,data) {
-            if(data){
-                Yzmphones.findOne({Use:1,YAM_Status:1},function (err,data) {
-                    if(data){
-                        data.Use = 1
-                        data.save()
-                        that.mkHM2Str(data.YAM_phone)
-                        return res.send({
-                            code:200,
-                            msg:"指定号码成功",
-                            YAM_phone:data.YAM_phone
-                        })
-                    }else{
-                        return res.send({
-                            code:200,
-                            msg:"当前账号库为空"
-                        })
-                    }
-                })
-            }else{
-                return res.send({
-                    code:0,
+
+            console.log(data)
+
+            try {
+                if(data.frequency > 0){
+                    Yzmphones.findOne({Use:1,YAM_Status:1},function (err,data) {
+
+                        // console.log(data)
+
+                        if(data){
+                            data.Use = 0
+                            data.save()
+                            that.mkHM2Str(data.YAM_phone)
+                            return res.send({
+                                code:200,
+                                msg:"指定号码成功",
+                                YAM_phone:data.YAM_phone
+                            })
+                        }else{
+                            return res.send({
+                                code:200,
+                                msg:"当前账号库为空"
+                            })
+                        }
+                    })
+                }else{
+                    return res.send({
+                        code:0,
                         msg:"授权码已失效"
-                })
+                    })
+                }
+            }catch (e) {
+                console.log(e)
             }
+
         })
     }
     async GetHM2StrAll(req,res,next){
@@ -111,7 +122,7 @@ class CityHandle {
     //生成授权码
     async addYZMCODE(req,res,next){
         const code = Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * 9999
-        Tokeninfo.create({Authorizationcode:code},function (err,data) {
+        Tokeninfo.create({Authorizationcode:code,frequency:3},function (err,data) {
             res.send({
                 data
             })
@@ -149,8 +160,9 @@ class CityHandle {
             axios.get(`http://www.mili18.com:9180/service.asmx/GetYzm2Str?token=398DECF75B8AD8BEBE1C56DF141F44E0&xmid=${xmid}&hm=${hm}&sf=1`).then((res=>{
                 console.log("获取验证码成功", res.data)
                 if(typeof(res.data) !== 'number'){
-                    Tokeninfo.remove({"Authorizationcode":token},function (err,data) {
-                        console.log(data)
+                    Tokeninfo.findOne({"Authorizationcode":token},function (err,data) {
+                        data.frequency =- 1
+                        data.save()
                     })
                     req.send({
                         code:200,
