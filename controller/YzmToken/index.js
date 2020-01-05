@@ -147,7 +147,7 @@ class CityHandle {
         await YzmToken.findOne(function (err,docs) {
             // console.log(docs.YAM_Token)
             axios.get(`http://www.mili18.com:9180/service.asmx/GetYzm2Str?token=398DECF75B8AD8BEBE1C56DF141F44E0&xmid=${xmid}&hm=${hm}&sf=1`).then((res=>{
-                // console.log("获取验证码成功", res.data)
+                console.log("获取验证码成功", res.data)
                 if(typeof(res.data) !== 'number'){
                     Tokeninfo.remove({"Authorizationcode":token},function (err,data) {
                         console.log(data)
@@ -173,14 +173,14 @@ class CityHandle {
      */
     async asas(req, res, next){
         var time = moment().format('YYYY-DD-MM  HH:mm:ss')
-        console.log(`手机号码开始检测-------------------------------------${time}`);
+        // console.log(`手机号码开始检测-------------------------------------${time}`);
         var token = null
         const xmid = 12865
         await YzmToken.findOne(function (err,docs) {
             token = docs.YAM_Token
         })
         await Yzmphones.find(function (err,data) {
-            console.log('待检测账号总条数----------' + data.length)
+            // console.log('待检测账号总条数----------' + data.length)
             var numbers = 0;
             for (let i=0;i<data.length;i++) {
                 axios.get(`http://www.mili18.com:9180/service.asmx/mkHM2Str?token=${token}&xmid=12865&hm=${data[i].YAM_phone}&op=1&pk=&rj=`)
@@ -223,7 +223,7 @@ class CityHandle {
             console.log(numbers)
 
         })
-        console.log(`手机号码完成检测-------------------------------------${time}`)
+        // console.log(`手机号码完成检测-------------------------------------${time}`)
     }
 }
 var ins01 = new CityHandle();
