@@ -23,7 +23,8 @@ class CityHandle {
                 YAM_phone: item,
                 YAM_time: p,
                 YAM_Status: 0,
-                Use: 1
+                Use: 1,
+                Token:null
 
             });
         })
@@ -38,7 +39,7 @@ class CityHandle {
      */
     async binding(req,res,next){
         var m = new Date();
-        var n = new Date(m.getTime() + 1000 * 60 * 2); //延期2分钟后自动释放
+        var n = new Date(m.getTime() + 1000 * 60 * 60); //延期2分钟后自动释放
         Yzmphones.findOne({YAM_phone:req.body.data},function (err,data) {
             if(data){
                 data.Use = 0
@@ -57,7 +58,7 @@ class CityHandle {
         })
     }
     /**
-     * 返回一条指定号码
+     * 返回一条指定号码...
      * @param req
      * @param res
      * @param next
@@ -66,31 +67,43 @@ class CityHandle {
     async GetHM2Str(req,res,next){
         var that = this
         await Tokeninfo.findOne({"Authorizationcode":req.body.token},function (err,data) {
-
-            console.log(data)
-
             try {
+                var frequency = data.frequency
                 if(data.frequency > 0){
-                    Yzmphones.findOne({Use:1,YAM_Status:1},function (err,data) {
+                    // 获取当前授权码是否获取过
+                    if(data.YAM_phone !== 0){
+                        // console.log(data.YAM_phone)
+                        return res.send({
+                            code:200,
+                            msg:"获取之前号码成功",
+                            YAM_phone:data.YAM_phone,
+                            frequency
+                        })
+                    }else{
+                        Yzmphones.findOne({Use:1,YAM_Status:1,Token:null || undefined},function (err,data) {
 
-                        // console.log(data)
+                            console.log(data)
 
-                        if(data){
-                            data.Use = 0
-                            data.save()
-                            that.mkHM2Str(data.YAM_phone)
-                            return res.send({
-                                code:200,
-                                msg:"指定号码成功",
-                                YAM_phone:data.YAM_phone
-                            })
-                        }else{
-                            return res.send({
-                                code:200,
-                                msg:"当前账号库为空"
-                            })
-                        }
-                    })
+                            that.token(req.body.token,data.YAM_phone)
+
+                            if(data){
+                                data.Use = 0
+                                data.save()
+                                that.mkHM2Str(data.YAM_phone)
+                                return res.send({
+                                    code:200,
+                                    msg:"指定号码成功",
+                                    YAM_phone:data.YAM_phone,
+                                    frequency
+                                })
+                            }else{
+                                return res.send({
+                                    code:200,
+                                    msg:"当前账号库为空"
+                                })
+                            }
+                        })
+                    }
                 }else{
                     return res.send({
                         code:0,
@@ -98,11 +111,29 @@ class CityHandle {
                     })
                 }
             }catch (e) {
-                console.log(e)
+                return res.send({
+                    code:0,
+                    msg:"授权码已失效"
+                })
             }
 
         })
     }
+
+    async token(a,b){
+        await Tokeninfo.findOne({"Authorizationcode":a},function (err,data) {
+            data.YAM_phone = b
+            data.save()
+        })
+        await Yzmphones.find({"YAM_phone":b},function (err,data) {
+            data.forEach(function(item,index,arr){
+                item.Token = b
+                item.save()
+            })
+        })
+    }
+
+
     async GetHM2StrAll(req,res,next){
         await Yzmphones.find(function (err,data) {
             if(data){
@@ -121,12 +152,26 @@ class CityHandle {
     }
     //生成授权码
     async addYZMCODE(req,res,next){
-        const code = Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * Math.ceil(Math.random()*10) * 9999
-        Tokeninfo.create({Authorizationcode:code,frequency:3},function (err,data) {
+        var data = []
+        var m = new Date();
+        var n = new Date(m.getTime() + 1000 * 60 * 60 * 12); //12小时时效期
+        for(let i=0;i<30;i++){
+            var returnStr = "",
+            range = 6,
+                arr = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+            for(var k=0; k<range; k++){
+                var index = Math.round(Math.random() * (arr.length-1));
+                returnStr += arr[index];
+            }
+            data.push({Authorizationcode:returnStr,frequency:3,YAM_phone:0})
+        }
+        Tokeninfo.create(data,function (err,data) {
             res.send({
                 data
             })
         })
+
+
     }
     /**
      * 获取指定号码
@@ -156,14 +201,18 @@ class CityHandle {
         var hm = res.body.hm
         var token = res.body.token
         await YzmToken.findOne(function (err,docs) {
-            // console.log(docs.YAM_Token)
-            axios.get(`http://www.mili18.com:9180/service.asmx/GetYzm2Str?token=398DECF75B8AD8BEBE1C56DF141F44E0&xmid=${xmid}&hm=${hm}&sf=1`).then((res=>{
+            axios.get(`http://www.mili18.com:9180/service.asmx/GetYzm2Str?token=${docs.YAM_Token}&xmid=${xmid}&hm=${hm}&sf=1`).then((res=>{
                 console.log("获取验证码成功", res.data)
                 if(typeof(res.data) !== 'number'){
                     Tokeninfo.findOne({"Authorizationcode":token},function (err,data) {
-                        data.frequency =- 1
+                        data.frequency -= 1
                         data.save()
                     })
+
+                    // Yzmphones.remove({YAM_phone:hm},function (err,data) {
+                    //     console.log(data)
+                    // })
+
                     req.send({
                         code:200,
                         data:res.data
